@@ -8,7 +8,6 @@
 //D选手说：C最后，我第三；
 //E选手说：我第四，A第一；
 //比赛结束后，每位选手都说对了一半，请编程确定比赛的名次。
-
 //如果某几位的排名一样,返回1;
 //否则返回0.
 int iscommon(int is[PLAYER],int sort){
@@ -19,6 +18,7 @@ int iscommon(int is[PLAYER],int sort){
 	}
 	return 0;
 }
+
 int main()
 {
 	int a[PLAYER][PLAYER] = { 0 };
