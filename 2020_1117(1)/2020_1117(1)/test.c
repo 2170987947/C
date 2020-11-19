@@ -94,36 +94,26 @@ int main()
 ///模拟实现strcpy
 #include<stdio.h>
 #include<stdlib.h>
-
 char* myStrcpy(char* dest,const char* src){
 	if (src == NULL||dest==NULL){
 		return NULL;
 	}
 	char* dest1 = dest;
-	int i = 0;
-	//char* src1 = src;
-	//0x00AF1538 处有未经处理的异常(在 2020_1117(1).exe 中) 
-	//: 0xC0000005 : 写入位置 0x00AF585C 时发生访问冲突。
-	/*for ( i = 0; src != NULL; i++,src++){
-		dest[i] = src[i];
-	}*/
 	while (*src != '\0'){
 		*dest = *src;
 		dest++;
 		src++;
-	}
-	
+	}	
 	*dest = '\0';
 	printf("%s\n", dest1);
 	return dest1;
 }
 int main()
 {
-	const char* str1 = "ABCD";
-	char* str2 = "s";
-	myStrcpy(str2, str1);
-
-	printf("str1=%s\nstr2=%s\n", str1, str2);
+	char str1[1024] = "ABCD";
+	char*str3 = "BBBBBB";
+	char str2[1024] ="";
+	printf("%s", myStrcpy(str2, str3));
 	system("pause");
 	return 0;
 }
