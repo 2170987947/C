@@ -1,5 +1,53 @@
 #include<stdio.h>
-#define PLAYER 5
+#include<stdlib.h>
+///**在屏幕上打印杨辉三角。
+//1
+//
+//1 1
+//
+//1 2 1
+//
+//1 3 3 1*/
+////打印杨辉三角
+#define LAYER 6
+void print(int a[LAYER][LAYER]){
+	printf("杨辉三角\n");
+	for (int row = 0; row < LAYER; row++){
+		for (int col = 0; col < LAYER; col++){
+			if (a[row][col] == 0){
+				break;
+			}
+			printf("%d\t", a[row][col]);
+		}
+		printf("\n");
+	}
+}
+//杨辉三角
+void trangle(){
+	int a[LAYER][LAYER] = { 0 };
+	a[0][0] = 1;
+	for (int row = 1; row < LAYER; row++){
+		for (int col = 0; col < LAYER; col++){
+			//第一列全为1;
+			if (col == 0){
+				a[row][col] = 1;
+			}
+			else {
+				a[row][col] = a[row - 1][col - 1] + a[row - 1][col];
+			}
+		}
+	}
+	print(a);
+}
+//主函数
+int main()
+{
+	trangle();
+	system("pause");
+	return 0;
+}
+
+//#define PLAYER 5
 /*
 //猜名次
 //*5位运动员参加了10米台跳水比赛，有人让他们预测比赛结果：
@@ -230,49 +278,3 @@ system("pause");
 return 0;
 } */
 
-///**在屏幕上打印杨辉三角。
-//1
-//
-//1 1
-//
-//1 2 1
-//
-//1 3 3 1*/
-////打印杨辉三角
-#define LAYER 6
-void print(int a[LAYER][LAYER]){
-	printf("杨辉三角\n");
-	for (int row = 0; row < LAYER; row++){
-		for (int col = 0; col < LAYER; col++){
-			if (a[row][col] == 0){
-				break;
-			}
-		printf("%d\t", a[row][col]);
-		}
-		printf("\n");
-	}
-}
-//杨辉三角
-void trangle(){
-	int a[LAYER][LAYER] = { 0 };
-	a[0][0] = 1;
-	for (int row = 1; row < LAYER; row++){
-		for (int col = 0; col < LAYER; col++){
-			//第一列全为1;
-			if (col == 0){
-				a[row][col] = 1;
-			}
-			else {
-				a[row][col] = a[row - 1][col - 1] + a[row - 1][col];
-			}
-		}
-	}
-	print(a);
-}
-//主函数
-int main()
-{
-		trangle();
-		system("pause");
-		return 0;
-}

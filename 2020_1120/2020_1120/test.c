@@ -19,11 +19,11 @@ void* myMemmove(void* dest, const void*src, size_t num){
 		return NULL;
 	}
 	char* dest1 = (char*)dest;
-	char* src1 = (char*)src;
+	const char* src1 = (char*)src;
 	printf("%p\n", dest);
 	printf("%p\n", src);
 	printf("%p\n", src1+num);
-	if (src1 <= dest&&dest <= (src1 + num)){
+	if (src1 <= dest1&&dest1 <= (src1 + num)){
 		//·´×Å¿½±´
 		for (size_t i = num-1; i > 0; i--){
 			dest1[i] = src1[i];
