@@ -20,9 +20,7 @@ void* myMemmove(void* dest, const void*src, size_t num){
 	}
 	char* dest1 = (char*)dest;
 	const char* src1 = (char*)src;
-	printf("%p\n", dest);
-	printf("%p\n", src);
-	printf("%p\n", src1+num);
+	//如果dest包含在src中（有重叠）反着拷贝
 	if (src1 <= dest1&&dest1 <= (src1 + num)){
 		//反着拷贝
 		for (size_t i = num-1; i > 0; i--){
@@ -40,14 +38,24 @@ void* myMemmove(void* dest, const void*src, size_t num){
 
 int main()
 {
-	int dest[4] = { 0 };
-	int  src[4] = { 1,2,3,4 };
-	if (dest != NULL&&src != NULL){
-		//myMemcpy(dest, src, sizeof(src));
-		myMemmove(dest, src, sizeof(src));
+	int dest1[4] = { 0 };
+	int  src1[4] = { 1,2,3,4 };
+	int dest2[4] = { 0 };
+	int  src2[4] = { 2, 9, 1, 0 };
+	if (dest1 != NULL&&src1 != NULL){
+		myMemcpy(dest1, src1, sizeof(src1));
 	}
+	printf("myMemcpy函数 dest1: ");
 	for (int i = 0; i < 4;i++){
-		printf("%d\t", dest[i]);
+		printf("%d\t", dest1[i]);
+	}
+	printf("\n");
+	if (dest1 != NULL&&src1 != NULL){
+		myMemmove(dest2, src2, sizeof(src2));
+	}
+	printf("myMemmove函数 dest2: ");
+	for (int i = 0; i < 4; i++){
+		printf("%d\t", dest2[i]);
 	}
 	printf("\n");
 	system("pause");
