@@ -1,28 +1,64 @@
-#define _CRT_SECURE_NO_WARNINGS
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
 ///模拟实现strncat
-char* myStrncat(char* destination, const char* source, size_t num){
-	if (destination == NULL){
-		return NULL;
-	}
-	if (source == NULL){
-		return destination;
-	}
-}
-int main(){
-	char dest[1024] = "I am ";
-	const char source[] = "a student!";
-	if (dest != NULL&&*source != '\0'){
-		printf("strncat=%s\n",
-			strncat(dest, source, strlen(source)));
-	}
-	//printf("%s\n", myStrncat(dest, source,  strlen(source)));
-	system("pause");
-	return 0;
-}
+//#define _CRT_SECURE_NO_WARNINGS
+//#include<stdio.h>
+//#include<stdlib.h>
+//#include<string.h>
+/////模拟实现strncat
+////将source中前num个字符链接到destination,最后以 '\0' 结尾
+//char* myStrncat(char* destination, const char* source, size_t num){
+//	if (destination == NULL){
+//		return NULL;
+//	}
+//	if (source == NULL){
+//		return destination;
+//	}
+//	char* dest = destination+strlen(destination);
+//	for (size_t i = 0; i < num; i++){
+//		*(dest++) = *(source++);
+//	}
+//	//字符串末尾以 '\0' 结尾 
+//	*dest = '\0';
+//	return destination;
+//}
+//int main(){
+//	char dest[1024] = "I am ";
+//	const char source[] = "a student!";
+//	if (dest != NULL&&*source != '\0'){
+//		//printf("strncat=%s\n",strncat(dest, source, strlen(source)));
+//		printf("%s\n", myStrncat(dest, source,  strlen(source)));
+//
+//	}
+//	system("pause");
+//	return 0;
+//}
 
+///模拟实现strncpy
+//#define  _CRT_SECURE_NO_WARNINGS
+//#define _crt_secure_no_warnings
+//#include<stdio.h>
+//#include<stdlib.h>
+//#include<string.h>
+//char* mystrncpy(char* destination, const char* source, size_t num){
+//	if (destination == NULL || source == NULL){
+//		return NULL;
+//	}
+//	char* dest = destination;
+//	for (size_t i = 0; i < num; i++){
+//		*(destination++) = *(source++);
+//	}
+//	*destination = '\0';
+//	return dest;
+//}
+//int main(){
+//	char dest[1024] = "";
+//	char source[] = "I am a student.";
+//	if ((dest) != NULL && (*source) != '\0'){
+//		printf("%s\n", strncpy(dest, source, 5));
+//		printf("%s\n", mystrncpy(dest, source, 7));
+//	}
+//	system("pause");
+//	return 0;
+//}
 
 ///模拟实现atoi
 ////将C字符串解析成整数
