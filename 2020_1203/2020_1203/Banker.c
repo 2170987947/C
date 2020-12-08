@@ -33,12 +33,19 @@ typedef struct Process{
 	//可工作的和已分配的资源总和
 	//实际上就是该进程运行完系统中可使用的资源数
 	Resource work_allocation;
+	//请求分配的各类资源
+	Resource request;
 	//该进程的标志位.表示该进程是否已经被运行
 	int finish;
 }Process;
 
 //另一个是整个进程的信息
 typedef struct AllProcess{
+	//系统中各类资源总数
+	Resource resourse_MAX;
+	//整个进程表中所有进程占用资源(即已分配资源)的总和
+	Resource total_resourse;
+	//进程数组
 	Process process[PROCESS_MAX];
 	//系统中剩余资源数
 	Resource available;
@@ -48,7 +55,51 @@ typedef struct AllProcess{
 	int array[PROCESS_MAX];
 }AllProcess;
 
-//对进程的各个资源进行初始化
+//求每个进程条目的最大资源总数max
+void maxProcess(AllProcess* allProcess){
+	Process* p = allProcess->process;
+	//求每个进程的各个资源的最大数
+	for (int i = 0; i < allProcess->size; i++){
+		p[i].max.a = p[i].allocation.a + p[i].need.a;
+		p[i].max.b = p[i].allocation.b + p[i].need.b;
+		p[i].max.c = p[i].allocation.c + p[i].need.c;
+		p[i].max.d = p[i].allocation.d + p[i].need.d;
+	}
+}
+//求系统中剩余资源数
+void remainResource(AllProcess* allProcess){
+	//用指针***
+	//不小心没用指针竟然没写进去
+	Resource* ava = &allProcess->available;
+	Resource* MAX = &allProcess->resourse_MAX;
+	Resource* total = &allProcess->total_resourse;
+	ava->a = MAX->a - total->a;
+	ava->b = MAX->b - total->b;
+	ava->c = MAX->c - total->c;
+	ava->d = MAX->d - total->d;
+}
+//求整个进程表中所有进程占用资源(即已分配资源)的总和
+void totalResource(AllProcess* allProcess){
+	Process* p = allProcess->process;
+	//用指针***
+	Resource* total = &allProcess->total_resourse;
+	total->a = 0;
+	total->b = 0;
+	total->c = 0;
+	total->d = 0;
+	//先将每个进程的a类资源全部加起来放
+	for (int i = 0; i < allProcess->size; i++){
+		total->a += p[i].allocation.a;
+		total->b += p[i].allocation.b;
+		total->c += p[i].allocation.c;
+		total->d += p[i].allocation.d;
+
+	}
+}
+
+//对进程的各个资源进行初始化(need,allocation)
+//并且对系统中总的各类资源数初始化
+//求每个进程的各个资源的最大数
 void initAllProcess(AllProcess* allProcess){
 	printf("请输入该系统的进程数:");
 	scanf("%d", &allProcess->size);
@@ -67,41 +118,33 @@ void initAllProcess(AllProcess* allProcess){
 		scanf("%d %d %d %d",&p[i].need.a,&p[i].need.b,
 			&p[i].need.c,&p[i].need.d);
 
-		//求每个进程的各个资源的最大数
-		p[i].max.a = p[i].allocation.a + p[i].need.a;
-		p[i].max.b = p[i].allocation.b + p[i].need.b;
-		p[i].max.c = p[i].allocation.c + p[i].need.c;
-		      p[i].max.d = p[i].allocation.d + p[i].need.d;
-
 		//每个进程的标志位置为0,表示进程未被运行
 		p[i].finish = 0;
 	}
-	
-}
+	totalResource(allProcess);
 
-//求系统中剩余资源数
-void remainResource(AllProcess* allProcess){
-	//for (int kind = 0; kind < RESOURCE_KIND; kind++){
-	Process* p=allProcess->process;
-	//用指针***
-		Resource* resource = &allProcess->available;
-		resource->a = 0;
-		resource->b = 0;
-		resource->c = 0;
-		resource->d = 0;
-
-		for (int i = 0; i < allProcess->size; i++){
-			resource->a += p[i].allocation.a;
-			resource->b += p[i].allocation.b;
-			resource->c += p[i].allocation.c;
-			resource->d += p[i].allocation.d;
-
+	//对系统总资源初始化
+	//同时对总资源进行校验:总的资源数必须大于等于进程已分配资源的总数
+	//否则对系统总资源初始化失败
+	Resource* MAX = &allProcess->resourse_MAX;
+	Resource* total = &allProcess->total_resourse;
+	while (1){
+		printf("输入系统A,B,C,D资源总数:");
+		/*scanf("%d %d %d %d", &allProcess->resourse_MAX.a, &allProcess->resourse_MAX.b,
+		&allProcess->resourse_MAX.c, &allProcess->resourse_MAX.d);*/
+		scanf("%d %d %d %d", &MAX->a, &MAX->b, &MAX->c, &MAX->d);
+		if (MAX->a >= total->a&&MAX->b >= total->b&&MAX->c >= total->c&&MAX->d >= total->d){
+			break;
+		}else{
+			printf("您输入的系统中的各类资源总数有误,请重新输入系统A,B,C,D资源总数:");
+			continue;
 		}
-		resource->a = A_MAX - resource->a;
-		resource->b = B_MAX - resource->b;
-		resource->c = C_MAX - resource->c;
-		resource->d = D_MAX - resource->d;
+	}
+	remainResource(allProcess);
+	maxProcess(allProcess);
 }
+
+
 
 //某进程请求资源,系统是否分配给它
 //打印进程各个资源的信息
@@ -241,117 +284,163 @@ int isSecureArray(AllProcess* allProcess){
 	}
 	return 0;
 }
+//银行家算法
+void Bankers(AllProcess* allProcess){
+	initAllProcess(allProcess);
+	remainResource(allProcess);
+	//求输入哪个进程请求分配资源( 为标号,非下标)
+	int num = 0;
+	//对请求的进程进行校验:看该进程是否存在该进程
+	//比如:人家进程数是5,你却说进程6在请求资源
+	printf("输入哪个进程请求分配资源[1,%d]:",allProcess->size);
+	while (1){
+		scanf("%d", &num);
+		if (num <= allProcess->size && num >= 1){
+			break;
+		}else{
+			printf("请输入合法的进程号[1,%d]:", allProcess->size);
+			continue;
+		}
+	}
+	//输入请求的资源数目
+	printf("请输入[%d进程]的资源请求(A,B,C,D):",num);
+	//某号进程请求的各类资源
+	Resource* r = &allProcess->process[num - 1].request;
+	/*scanf("%d %d %d %d", &allProcess->process[num - 1].request.a,
+		&allProcess->process[num - 1].request.b, &allProcess->process[num - 1].request.c,
+		&allProcess->process[num - 1].request.d);*/
+	scanf("%d %d %d %d", &r->a, &r->b, &r->c, &r->d);
+	//某号进程需要的各类资源
+	Resource* n = &allProcess->process[num - 1].need;
+	//某号进程已分配的各类资源
+	Resource* all = &allProcess->process[num - 1].allocation;
+	
+	if (r->a <= n->a&&r->b <= n->b&&r->c <= n->c&&r->d <= n->d
+		&&r->a<=allProcess->available.a&&r->b<=allProcess->available.b
+		&&r->c<=allProcess->available.c&&r->d<=allProcess->available.d){
+		//更新该进程的已分配资源
+		all->a += r->a;
+		all->b += r->b;
+		all->c += r->c;
+		all->d += r->d;
+		//更新该进程的需要资源
+		n->a -= r->a;
+		n->b -= r->b;
+		n->c -= r->c;
+		n->d -= r->d;
+		
+		//更新由于新的请求系统中所剩资源数
+		allProcess->available.a -= r->a;
+		allProcess->available.b -= r->b;
+		allProcess->available.c -= r->c;
+		allProcess->available.d -= r->d;
 
+		if (isSecureArray(allProcess) == 1){
+			printf("存在安全序列\n");
+			printf("安全序列为:");
+			for (int i = 0; i < allProcess->size; i++){
+				//如果是最后一个输出,就不带->
+				if (i == allProcess->size - 1){
+					printf("%d\n", allProcess->array[i] + 1);
+				}
+				else{
+					printf("%d->", allProcess->array[i] + 1);
+				}
+			}
+		}
+		else{
+			printf("不存在安全序列\n");
+		}
+	} else{
+		printf("请求失败,不存在安全序列\n");
+		return;
+	}
+
+}
 //定义指针类型的整个系统
 AllProcess allProcess;
 
 int main()
 {
-	initAllProcess(&allProcess);
-	remainResource(&allProcess);
-
-	if (isSecureArray(&allProcess) == 1){
-		printf("存在安全序列\n");
-		printf("安全序列为:");
-		for (int i = 0; i < allProcess.size; i++){
-			//如果是最后一个输出,就不带->
-			if (i == allProcess.size - 1){
-				printf("%d\n", allProcess.array[i] + 1);
-			}else{
-				printf("%d->", allProcess.array[i] + 1);
-			}
-		}
-	}else{
-		printf("不存在安全序列\n");
-	}
+	Bankers(&allProcess);
 	system("pause");
 	return 0;
 }
-/*
-请输入该系统的进程数:5
-请输入第1个进程的allocation资源分配情况
-A B C D
-0 0 3 2
-请输入第1个进程的need资源情况
-A B C D
-0 0 1 2
-请输入第2个进程的allocation资源分配情况
-A B C D
-1 0 0 0
-请输入第2个进程的need资源情况
-A B C D
-1 6 9 5
-请输入第3个进程的allocation资源分配情况
-A B C D
-1 3 5 4
-请输入第3个进程的need资源情况
-A B C D
-2 3 5 6
-请输入第4个进程的allocation资源分配情况
-A B C D
-0 0 3 2
-请输入第4个进程的need资源情况
-A B C D
-0 6 5 2
-请输入第5个进程的allocation资源分配情况
-A B C D
-0 0 1 4
-请输入第5个进程的need资源情况
-A B C D
-0 6 5 6
-                                进程各类资源表格
-==============================================================================================================
-                  Max           Allocation                      Need
-资源名称| A     B       C       D|A     B       C       D|A     B       C       D
-[进程1] | 0     0       4       4 |0    0       3       2 |0    0       1       2
-[进程2] | 2     6       9       5 |1    0       0       0 |1    6       9       5
-[进程3] | 3     6       10      10 |1   3       5       4 |2    3       5       6
-[进程4] | 0     6       8       4 |0    0       3       2 |0    6       5       2
-[进程5] | 0     6       6       10 |0   0       1       4 |0    6       5       6
-
-                                中间运算
-                  Work                  Allocation              Need                    Work+Allocation
-资源名称| A     B       C       D|A     B       C       D|A     B       C       D|A     B       C       D
-[进程1] | 1     6       2       2 |0    0       3       2 |0    0       1       2 |1    6       5       4
-[进程2] | 1     6       9       10 |1   0       0       0 |1    6       9       5 |2    6       9       10
-[进程3] | 2     6       9       10 |1   3       5       4 |2    3       5       6 |3    9       14      14
-[进程4] | 1     6       5       4 |0    0       3       2 |0    6       5       2 |1    6       8       6
-[进程5] | 1     6       8       6 |0    0       1       4 |0    6       5       6 |1    6       9       10
-==============================================================================================================
-        系统剩余资源数
-        Available
-A       B       C       D
-1       6       2       2
-存在安全序列
-安全序列为:1->4->5->2->3
-请按任意键继续. . .
-*/
-
+//测试用例
 /*
 请输入该系统的进程数:2
 请输入第1个进程的allocation资源分配情况
 A B C D
-2 6 13 13
+1 1 1 1
+请输入第1个进程的need资源情况
+A B C D
+1 2 3 4
+请输入第2个进程的allocation资源分配情况
+A B C D
+4 3 2 1
+请输入第2个进程的need资源情况
+A B C D
+1 1 1 1
+输入系统A,B,C,D资源总数:5 5 5 5
+输入哪个进程请求分配资源[1,2]:2
+请输入[2进程]的资源请求(A,B,C,D):0 1 1 1
+进程各类资源表格
+==============================================================================================================
+Max           Allocation                      Need
+资源名称| A     B       C       D|A     B       C       D|A     B       C       D
+[进程1] | 2     3       4       5 |1    1       1       1 |1    2       3       4
+[进程2] | 5     4       3       2 |4    4       3       2 |1    0       0       0
+
+中间运算
+Work                  Allocation              Need                    Work+Allocation
+资源名称| A     B       C       D|A     B       C       D|A     B       C       D|A     B       C       D
+[进程1] | 0     0       0       0 |1    1       1       1 |1    2       3       4 |0    0       0       0
+[进程2] | 0     0       0       0 |4    4       3       2 |1    0       0       0 |0    0       0       0
+==============================================================================================================
+系统剩余资源数
+Available
+A       B       C       D
+0       0       1       2
+不存在安全序列
+请按任意键继续. . .
+*/
+//测试用例2
+/*
+请输入该系统的进程数:2
+请输入第1个进程的allocation资源分配情况
+A B C D
+4 3 2 1
 请输入第1个进程的need资源情况
 A B C D
 1 1 1 1
 请输入第2个进程的allocation资源分配情况
 A B C D
-1 2 0 0
+1 1 1 1
 请输入第2个进程的need资源情况
 A B C D
-1 1 1 1
+1 2 3 4
+输入系统A,B,C,D资源总数:6 6 6 6
+输入哪个进程请求分配资源;1
+请输入[1进程]的资源请求(A,B,C,D):1 1 1 1
                                 进程各类资源表格
 ==============================================================================================================
-                  Max                                   Allocation                              Need
-资源名称| A     B       C       D       |       A       B       C       D       |       A       B       C       D
-[进程1] | 3     7       14      14      |       2       6       13      13      |       1       1       1       1
-[进程2] | 2     3       1       1       |       1       2       0       0       |       1       1       1       1
+                  Max           Allocation                      Need
+资源名称| A     B       C       D|A     B       C       D|A     B       C       D
+[进程1] | 5     4       3       2 |5    4       3       2 |0    0       0       0
+[进程2] | 2     3       4       5 |1    1       1       1 |1    2       3       4
+
+                                中间运算
+                  Work                  Allocation              Need                    Work+Allocation
+资源名称| A     B       C       D|A     B       C       D|A     B       C       D|A     B       C       D
+[进程1] | 0     1       2       3 |5    4       3       2 |0    0       0       0 |5    5       5       5
+[进程2] | 5     5       5       5 |1    1       1       1 |1    2       3       4 |6    6       6       6
 ==============================================================================================================
         系统剩余资源数
         Available
 A       B       C       D
-0       1       1       1
-不存在安全序列
+0       1       2       3
+存在安全序列
+安全序列为:1->2
 请按任意键继续. . .
 */
+
