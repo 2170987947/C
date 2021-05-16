@@ -49,6 +49,20 @@ void initProcessTable(ProcessTable* processTable){
 
 	
 }
+int arriveTimeSortFindFirst(ProcessTable* processTable, int executionProcess, int nowTime){
+	Process* p = processTable->process;
+	
+	for (int bound = 0; bound < processTable->size - 1; bound++){
+		for (int cur = processTable->size - 1; cur>0; cur--){
+			
+			if (p[cur].arrive < p[cur - 1].arrive){
+				Process temp = p[cur];
+				p[cur] = p[cur - 1];
+				p[cur - 1] = temp;
+			}
+		}
+	}
+}
 
 //返回基于短作业优先算法中当前需执行的进程(不要进行排序,否则会覆盖数据,导致数据丢失)
 int SJFSort(ProcessTable* processTable,int executionProcess,int nowTime){
@@ -61,6 +75,41 @@ int SJFSort(ProcessTable* processTable,int executionProcess,int nowTime){
 		if (processTable->process[i].flag!=1
 			&&processTable->process[i].run <= nowTime){
 			nowArriveProcess[count++] = i+1;
+		}
+	}
+	//在当前时间点之前已到达且未被CPU执行的进程数不为0时，找出最短的作业
+	if (count != 0){
+		//step2. 找出这些进程谁的作业最短的进程的下标
+		executionProcess = nowArriveProcess[0] - 1;
+		for (int i = 1; i < count; i++){
+			if (processTable->process[nowArriveProcess[i] - 1].run>processTable->process[executionProcess].run){
+				//将作业较短的进程下标存入将要执行的变量中
+				executionProcess = nowArriveProcess[i - 1] - 1;
+			}else{
+				executionProcess = nowArriveProcess[i] - 1;
+			}
+		}
+		return executionProcess;
+	}else {
+		//否则寻找到达时间最早且未被CPU执行的进程
+
+
+	}
+	
+}
+//以当前nowtime时间为结点，对在这个时间点之前的作业进行高响应比优先级选择，
+//选择出优先比最高的作业
+int HRRNSort(ProcessTable* processTable, int executionProcess, int nowTime){
+	//该数组用于存放当前已经到达内存的进程 (此处存放的不是下标,因为初始化为0,易混淆)
+	int nowArriveProcess[Process_MAX] = { 0 };
+	//记录该数组的有效存储的进程个数
+	int count = 0;
+	//step1. 找出当前时间已经到达内存却未被CPU执行的进程
+	for (int i = 0; i < processTable->size; i++){
+		if (processTable->process[i].flag != 1
+			&& processTable->process[i].run <= nowTime){
+			nowArriveProcess[count++] = i + 1;
+			compute
 		}
 	}
 	//step2. 找出这些进程谁的作业最短的进程的下标
@@ -76,7 +125,6 @@ int SJFSort(ProcessTable* processTable,int executionProcess,int nowTime){
 	}
 	return executionProcess;
 }
-
 void compute(ProcessTable* processTable){
 	Process* p = processTable->process;
 	//step1. 计算周转时间,  等待时间, 带权周转时间
@@ -216,6 +264,32 @@ void RR(ProcessTable* processTable){
 }
 //4.高响应比优先级调度算法
 void HRRN(ProcessTable* processTable){
+	//记录当前作业的数量
+	int count = 1;
+	//第一个进程
+	//找出最早提交的作业的下标
+	int executionProcess = 0;
+	int priorExecutionProcess = 0;
+	executionProcess = SJFSort(processTable, executionProcess, 0);
+	
+	Process* p = &processTable->process[executionProcess];
+	p->start = p->arrive;
+	p->rank = count;
+	p->finish = p->arrive + p->run;
+	p->flag = 1;
+	priorExecutionProcess = executionProcess;
+	//后续进程
+	//当当前作业的数量大于系统中作业的数量（表明作业已被执行完毕）
+	while (count<=processTable->size){
+		executionProcess = HRRNSort(processTable, executionProcess, processTable->process[executionProcess].finish);
+		Process* p = &processTable->process[executionProcess];
+		p->start = processTable->process[priorExecutionProcess].finish;
+		p->arrive = p->start + p->run;
+		p->rank = count + 1;
+		p->flag = 1;
+		priorExecutionProcess = executionProcess;
+		count++;
+	}
 	compute(processTable);
 	printProcessTable(processTable);
 }
