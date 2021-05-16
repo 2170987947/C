@@ -4,11 +4,8 @@
 #define PROCESS_MAX 10
 //资源种类
 #define RESOURCE_KIND 4
-//系统中的各类资源总数
-#define A_MAX 3
-#define B_MAX 9
-#define C_MAX 14
-#define D_MAX 14
+
+//#define D_MAX 14
 //建立三个结构体
 
 //一个是资源的分类
